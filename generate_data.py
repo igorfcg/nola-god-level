@@ -8,11 +8,13 @@ import random
 import argparse
 from datetime import datetime, timedelta
 from decimal import Decimal
-import psycopg2
+import psycopg2 # type: ignore
 from psycopg2.extras import execute_batch
 from faker import Faker
 
 fake = Faker('pt_BR')
+
+
 
 # Configurations
 BRAND_ID = 1
@@ -81,12 +83,19 @@ def get_hour_weight(hour):
             return weight
     return 0.01
 
-
 def setup_base_data(conn):
     """Create brands, channels, payment types"""
     print("Setting up base data...")
     cursor = conn.cursor()
-    
+
+    # Ensure brand exists
+    cursor.execute("SELECT id FROM brands WHERE id = %s", (BRAND_ID,))
+    if cursor.fetchone() is None:
+        cursor.execute(
+            "INSERT INTO brands (id, name) VALUES (%s, %s)",
+            (BRAND_ID, 'Challenge Brand')
+        )
+
     # Sub-brands
     sub_brands = ['Challenge Burger', 'Challenge Pizza', 'Challenge Sushi']
     sub_brand_ids = []
@@ -98,7 +107,7 @@ def setup_base_data(conn):
             (BRAND_ID, sb)
         )
         sub_brand_ids.append(cursor.fetchone()[0])
-    
+
     # Channels
     channel_ids = []
     for name, ch_type, weight, commission in CHANNELS:
@@ -107,19 +116,19 @@ def setup_base_data(conn):
             VALUES (%s, %s, %s, %s) RETURNING id
         """, (BRAND_ID, name, f'Canal {name}', ch_type))
         channel_ids.append({
-            'id': cursor.fetchone()[0], 
-            'name': name, 
-            'type': ch_type, 
+            'id': cursor.fetchone()[0],
+            'name': name,
+            'type': ch_type,
             'weight': weight
         })
-    
+
     # Payment types
     for pt in PAYMENT_TYPES_LIST:
         cursor.execute(
             "INSERT INTO payment_types (brand_id, description) VALUES (%s, %s)",
             (BRAND_ID, pt)
         )
-    
+
     conn.commit()
     print(f"✓ Base data: {len(sub_brand_ids)} sub-brands, {len(channel_ids)} channels")
     return sub_brand_ids, channel_ids
