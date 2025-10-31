@@ -1,0 +1,7 @@
+psycopg2-binary==2.9.9
+Faker==20.1.0
+python-dotenv
+alembic>=1.13.0  # para migrações futuras
+fastapi
+uvicorn
+sqlalchemy

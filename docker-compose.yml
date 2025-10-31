@@ -1,5 +1,7 @@
 version: '3.8'
 
+
+#
 services:
   postgres:
     image: postgres:15
@@ -21,7 +23,7 @@ services:
 
   data-generator:
     build:
-      context: .
+      context: ./api
       dockerfile: Dockerfile
     container_name: godlevel-data-gen
     depends_on:
@@ -56,4 +58,3 @@ services:
 volumes:
   postgres_data:
     driver: local
-
